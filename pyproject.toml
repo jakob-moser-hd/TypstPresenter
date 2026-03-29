@@ -1,0 +1,16 @@
+[project]
+name = "typstpresenter"
+version = "0.1.0"
+description = "Convert slides from PPTX to Typst (and maybe back?) using intermediate abstract representations"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.24.1",
+]
+
+[project.scripts]
+typstpresenter="typstpresenter.__main__:app"
+
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
