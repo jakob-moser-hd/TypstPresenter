@@ -15,3 +15,8 @@ typstpresenter="typstpresenter.__main__:app"
 [build-system]
 requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.8",
+]
