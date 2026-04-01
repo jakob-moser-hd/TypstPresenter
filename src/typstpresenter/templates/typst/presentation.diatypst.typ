@@ -4,5 +4,5 @@
 )
 
 {% for slide in presentation %}
-= {{ slide.title }}
+= {{ slide.title | express }}
 {% endfor %}
