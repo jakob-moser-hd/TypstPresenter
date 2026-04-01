@@ -1,7 +1,8 @@
+from abc import abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self
+from typing import Self, overload
 
 import pptx
 
@@ -10,7 +11,7 @@ from typstpresenter.typst.express import express
 
 
 @dataclass
-class Presentation:
+class Presentation(Sequence[Slide]):
     slides: Sequence[Slide]
 
     # The path to the source file (if sourced from a file)
@@ -46,3 +47,17 @@ class Presentation:
         """
         with path.open("w", encoding="utf-8") as f:
             f.write(self.to_typst_str())
+
+    @overload
+    @abstractmethod
+    def __getitem__(self, index: int) -> Slide: ...
+
+    @overload
+    @abstractmethod
+    def __getitem__(self, index: slice) -> Sequence[Slide]: ...
+
+    def __getitem__(self, index):
+        return self.slides[index]
+
+    def __len__(self) -> int:
+        return len(self.slides)
