@@ -38,9 +38,7 @@ def _interpret_text_frame(text_frame: TextFrame) -> Text:
 
 def _interpret_paragraph(paragraph: _Paragraph) -> Text:
     # TODO Keep formatting, by going over the runs in the paragraph
-    return Text(
-        tuple(_interpret_run(run) for run in paragraph.runs)
-    )
+    return Text(tuple(_interpret_run(run) for run in paragraph.runs))
 
 
 def _interpret_run(run: _Run) -> Atom:
