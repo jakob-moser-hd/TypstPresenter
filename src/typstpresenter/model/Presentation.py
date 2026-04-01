@@ -12,9 +12,15 @@ import pptx
 class Presentation:
     slides: Sequence[Slide]
 
+    # The path to the source file (if sourced from a file)
+    source_path: Path | None = None
+
     @classmethod
     def from_file(cls, path: Path) -> Self:
         prs = pptx.Presentation(str(path))
         return cls(
-            slides=tuple(Slide.from_pptx_slide(pptx_slide) for pptx_slide in prs.slides)
+            slides=tuple(
+                Slide.from_pptx_slide(pptx_slide) for pptx_slide in prs.slides
+            ),
+            source_path=path,
         )
