@@ -1,11 +1,12 @@
-from dataclasses import dataclass
-from typing import Self
-from pathlib import Path
 from collections.abc import Sequence
-
-from typstpresenter.model.Slide import Slide
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Self
 
 import pptx
+
+from typstpresenter.model.Slide import Slide
+from typstpresenter.typst.express import express
 
 
 @dataclass
@@ -35,7 +36,7 @@ class Presentation:
         """
         Convert the presentation to a string in Typst format and return it.
         """
-        raise NotImplementedError()  # TODO
+        return express(self)
 
     def to_file(self, path: Path) -> None:
         """
@@ -43,4 +44,5 @@ class Presentation:
 
         Will output the file in *.typ (Typst) format, no matter the extension.
         """
-        raise NotImplementedError()  # TODO
+        with path.open("w", encoding="utf-8") as f:
+            f.write(self.to_typst_str())
