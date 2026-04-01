@@ -27,5 +27,5 @@ typstpresenter convert presentation.pdf presentation.typ
 3. Place that file in [`src/typstpresenter/templates/typst`](./src/typstpresenter/templates/typst).
 
 > [!warning]
-> 
+>
 > You then also need to make sure to install the `typstpresenter` tool from your changed repo instead of mine; or run it directly from your repo (not as a tool) by prefixing the command with `uv run`; or bother the maintainer to implement something smarter.
