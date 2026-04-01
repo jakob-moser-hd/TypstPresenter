@@ -21,6 +21,28 @@ class Slide:
     def title(self) -> Title | None:
         return self.get_singular_element_or_none(Title)
 
+    @cached_property
+    def content(self) -> Element | None:
+        """
+        Return the main content of the slide. We currently better hope that this is one (or no) element,
+        which makes up the entire slide.
+        """
+        # Currently, everything which is not the title is content
+        content_elements = tuple(e for e in self.elements if not isinstance(e, Title))
+
+        if not content_elements:
+            return None
+
+        # TODO We should of course be able to handle multiple content elements. Technically, maybe a
+        #  class Element(ElementGroup) could solve the problem. Semantically, this might be a bit harder, because
+        #  how would you render them? As columns next to each other? Just one after the other? 70/30 split?
+        if len(content_elements) > 1:
+            raise ValueError(
+                "Slide hat more than 1 content element, which we currently can't handle."
+            )
+
+        return content_elements[0]
+
     def get_singular_element_or_none[T: Element](self, t: type[T]) -> T | None:
         elements = tuple(e for e in self.elements if isinstance(e, t))
 

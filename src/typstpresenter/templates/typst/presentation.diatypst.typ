@@ -5,4 +5,6 @@
 
 {% for slide in presentation %}
 = {{ slide.title | express }}
+
+{{ slide.content | express }}
 {% endfor %}
