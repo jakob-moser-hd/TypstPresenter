@@ -11,7 +11,7 @@ First, install `uv`: https://docs.astral.sh/uv/getting-started/installation/
 Then, install TypstPresenter as a tool:
 
 ```
-uv tool install git+https://github.com/jakob-moser-hd/TypstPresenter.git
+uv tool install git+https://github.com/aip-hd-tea/TypstPresenter.git
 ```
 
 ## Usage
