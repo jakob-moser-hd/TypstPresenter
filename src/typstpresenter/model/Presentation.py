@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -56,11 +55,9 @@ class Presentation(Sequence[Slide]):
             f.write(self.to_typst_str())
 
     @overload
-    @abstractmethod
     def __getitem__(self, index: int) -> Slide: ...
 
     @overload
-    @abstractmethod
     def __getitem__(self, index: slice) -> Sequence[Slide]: ...
 
     def __getitem__(self, index):

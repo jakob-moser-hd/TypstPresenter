@@ -46,6 +46,9 @@ def _express_element(element: Element | str) -> str:
             return "\n".join(f"- {_express_element(item)}" for item in items)
         case Title(text) | PresentationTitle(text):
             return _express_element(text)
+        case str() as s:
+            # TODO Improve escaping logic
+            return s.replace("*", r"\*").replace("~", r"\~")
         case None:
             return ""
         case _:

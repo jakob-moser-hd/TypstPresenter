@@ -1,3 +1,6 @@
+import logging
+from itertools import groupby
+
 from pptx.enum.shapes import PP_PLACEHOLDER_TYPE
 from pptx.shapes import Subshape
 from pptx.shapes.base import BaseShape
@@ -13,6 +16,8 @@ from typstpresenter.model.text.Subscript import Subscript
 from typstpresenter.model.text.Superscript import Superscript
 from typstpresenter.model.text.Text import Text, Atom
 from typstpresenter.powerpoint.Ignore import Ignore
+
+logger = logging.getLogger(__name__)
 
 
 def _interpret_placeholder(shape: SlidePlaceholder) -> Element | Ignore | None:
@@ -38,12 +43,50 @@ def _interpret_placeholder(shape: SlidePlaceholder) -> Element | Ignore | None:
             return None
 
 
+type Level = int
+
+
 def _interpret_text_frame(text_frame: TextFrame) -> Text | List:
     if len(text_frame.paragraphs) == 1:
         return _interpret_paragraph(text_frame.paragraphs[0])
+
+    # Just pretend any multi-paragraph text is a list
+    paragraphs_by_level = groupby(text_frame.paragraphs, key=lambda item: item.level)
+    list_stack: list[tuple[Level, List]] = []
+
+    for level, paragraphs in paragraphs_by_level:
+        list_ = List(tuple(_interpret_paragraph(p) for p in paragraphs))
+
+        if len(list_stack) > 0:
+            previous_level, previous_list = list_stack.pop()
+        else:
+            # Stack was previously empty, this only happens in the first iteration.
+            previous_level, previous_list = -1, None
+
+        # Go up the stack until we find a parent (i.e. one whose level is smaller than the current one).
+        # If the current list is a root level, we'd empty the stack completely
+        while len(list_stack) > 0 and level <= previous_level:
+            previous_level, previous_list = list_stack.pop()
+
+        if level > previous_level:
+            if previous_list is not None:
+                # This list has a parent, append it to the parent and put the barent back on the stack.
+                list_stack.append((previous_level, previous_list.append(list_)))
+
+            # Put the list itself on the stack because it is the level we are currently working at.
+            list_stack.append((level, list_))
+        elif level == previous_level:
+            # If this list is on the same level as the previous one, concatenate both lists and keep the
+            # earlier one.
+            list_stack.append((previous_level, previous_list.append(*list_)))
+
+    if list_stack:
+        root_level, root_list = list_stack[0]
+
+        return root_list
     else:
-        # Just pretend any multi-paragraph text is a list
-        return List(items=tuple(_interpret_paragraph(p) for p in text_frame.paragraphs))
+        logger.warning("Found ill-formed list, returning nothing")
+        return Text(("",))
 
 
 def _interpret_paragraph(paragraph: _Paragraph) -> Text:
