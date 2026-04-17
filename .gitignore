@@ -1,3 +1,6 @@
+# local dirs
+docs_local/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
