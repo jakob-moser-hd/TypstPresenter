@@ -29,7 +29,10 @@ def test_two_content_blocks(caplog):
     typst_output = presentation.to_typst_str()
     print(typst_output)
 
-    # We now expect BOTH content blocks to be rendered sequentially without dropping.
+    # We now expect BOTH content blocks to be rendered inside a Grid markup without dropping.
+    assert "#grid(" in typst_output
+    assert "columns: 2" in typst_output
+    
     assert "Left content block" in typst_output
     assert "Right content block" in typst_output
 

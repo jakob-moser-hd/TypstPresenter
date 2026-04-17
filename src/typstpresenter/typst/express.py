@@ -6,6 +6,7 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 
 from typstpresenter.model.Element import Element
 from typstpresenter.model.List import List
+from typstpresenter.model.Grid import Grid
 from typstpresenter.model.PresentationTitle import PresentationTitle
 from typstpresenter.model.Title import Title
 from typstpresenter.model.text.Link import Link
@@ -94,6 +95,15 @@ class ListHandler:
         return "\n".join(_indent_or_add_dash(isinstance(item, List), dispatcher(item)) for item in element.items)
 
 
+class GridHandler:
+    def can_handle(self, element: Element | str | None) -> bool:
+        return isinstance(element, Grid)
+
+    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
+        items = ",\n".join(f"  [{dispatcher(item)}]" for item in element.items)
+        return f"#grid(\n  columns: {element.columns},\n  gutter: 1em,\n{items}\n)"
+
+
 class TitleHandler:
     def can_handle(self, element: Element | str | None) -> bool:
         return isinstance(element, Title) or isinstance(element, PresentationTitle)
@@ -132,6 +142,7 @@ register_expression_handler(TextHandler())
 register_expression_handler(SubscriptHandler())
 register_expression_handler(SuperscriptHandler())
 register_expression_handler(ListHandler())
+register_expression_handler(GridHandler())
 register_expression_handler(TitleHandler())
 register_expression_handler(StringHandler())
 register_expression_handler(NoneHandler())
