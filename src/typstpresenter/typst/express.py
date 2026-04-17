@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, Callable, Any
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 
@@ -31,35 +31,118 @@ def express(presentation: Presentation) -> str:
     )
 
 
-def __indent(string: str) -> str:
+def _indent(string: str) -> str:
     return "\n".join(f"  {line}" for line in string.split("\n"))
 
 
-def __indent_or_add_dash(criterion: bool, string: str) -> str:
-    return __indent(string) if criterion else f"- {string}"
+def _indent_or_add_dash(criterion: bool, string: str) -> str:
+    return _indent(string) if criterion else f"- {string}"
 
 
-def _express_element(element: Element | str) -> str:
-    match element:
-        case Link(text, target):
-            return f'#link("{target}")[{_express_element(text)}]'
-        case Text(value):
-            return "".join(_express_element(x) for x in value)
-        case Subscript(text):
-            return f"#sub[{_express_element(text)}]"
-        case Superscript(text):
-            return f"#super[{_express_element(text)}]"
-        case List(items):
-            return "\n".join(__indent_or_add_dash(isinstance(item, List), _express_element(item)) for item in items)
-        case Title(text) | PresentationTitle(text):
-            return _express_element(text)
-        case str() as s:
-            # TODO Improve escaping logic
-            return s.replace("*", r"\*").replace("~", r"\~")
-        case None:
-            return ""
-        case _:
-            return str(element)
+class ExpressionHandler(Protocol):
+    def can_handle(self, element: Element | str | None) -> bool:
+        ...
+
+    def express(self, element: Element | str | None, dispatcher: Callable[[Element | str | None], str]) -> str:
+        ...
+
+
+_EXPRESSION_HANDLERS: list[ExpressionHandler] = []
+
+
+def register_expression_handler(handler: ExpressionHandler) -> None:
+    _EXPRESSION_HANDLERS.append(handler)
+
+
+class LinkHandler:
+    def can_handle(self, element: Element | str | None) -> bool:
+        return isinstance(element, Link)
+
+    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
+        return f'#link("{element.target}")[{dispatcher(element.text)}]'
+
+
+class TextHandler:
+    def can_handle(self, element: Element | str | None) -> bool:
+        return isinstance(element, Text)
+
+    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
+        return "".join(dispatcher(x) for x in element.value)
+
+
+class SubscriptHandler:
+    def can_handle(self, element: Element | str | None) -> bool:
+        return isinstance(element, Subscript)
+
+    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
+        return f"#sub[{dispatcher(element.text)}]"
+
+
+class SuperscriptHandler:
+    def can_handle(self, element: Element | str | None) -> bool:
+        return isinstance(element, Superscript)
+
+    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
+        return f"#super[{dispatcher(element.text)}]"
+
+
+class ListHandler:
+    def can_handle(self, element: Element | str | None) -> bool:
+        return isinstance(element, List)
+
+    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
+        return "\n".join(_indent_or_add_dash(isinstance(item, List), dispatcher(item)) for item in element.items)
+
+
+class TitleHandler:
+    def can_handle(self, element: Element | str | None) -> bool:
+        return isinstance(element, Title) or isinstance(element, PresentationTitle)
+
+    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
+        return dispatcher(element.text)
+
+
+class StringHandler:
+    def can_handle(self, element: Element | str | None) -> bool:
+        return isinstance(element, str)
+
+    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
+        # TODO Improve escaping logic
+        return element.replace("*", r"\\*").replace("~", r"\\~")
+
+
+class NoneHandler:
+    def can_handle(self, element: Element | str | None) -> bool:
+        return element is None
+
+    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
+        return ""
+
+
+class FallbackHandler:
+    def can_handle(self, element: Element | str | None) -> bool:
+        return True
+
+    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
+        return str(element)
+
+
+register_expression_handler(LinkHandler())
+register_expression_handler(TextHandler())
+register_expression_handler(SubscriptHandler())
+register_expression_handler(SuperscriptHandler())
+register_expression_handler(ListHandler())
+register_expression_handler(TitleHandler())
+register_expression_handler(StringHandler())
+register_expression_handler(NoneHandler())
+register_expression_handler(FallbackHandler())
+
+
+def _express_element(element: Element | str | None) -> str:
+    for handler in _EXPRESSION_HANDLERS:
+        if handler.can_handle(element):
+            return handler.express(element, _express_element)
+    return str(element)
 
 
 # This way, you can say something in Jinja like `{{ slide.title | express }}` and Jinja will apply the _express_element

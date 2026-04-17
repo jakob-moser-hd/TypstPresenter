@@ -1,5 +1,6 @@
 import logging
 from itertools import groupby
+from typing import Protocol
 
 from pptx.enum.shapes import PP_PLACEHOLDER_TYPE
 from pptx.shapes import Subshape
@@ -20,7 +21,22 @@ from typstpresenter.powerpoint.Ignore import Ignore
 logger = logging.getLogger(__name__)
 
 
-def _interpret_placeholder(shape: SlidePlaceholder) -> Element | Ignore | None:
+class ShapeHandler(Protocol):
+    def can_handle(self, shape: BaseShape | Subshape) -> bool:
+        ...
+
+    def interpret(self, shape: BaseShape | Subshape) -> Element | Ignore | None:
+        ...
+
+
+_SHAPE_HANDLERS: list[ShapeHandler] = []
+
+
+def register_shape_handler(handler: ShapeHandler) -> None:
+    _SHAPE_HANDLERS.append(handler)
+
+
+class SlidePlaceholderHandler:
     """
     Interpret a shape of type SlidePlaceholder.
 
@@ -28,19 +44,28 @@ def _interpret_placeholder(shape: SlidePlaceholder) -> Element | Ignore | None:
 
     See: https://python-pptx.readthedocs.io/en/latest/user/understanding-shapes.html
     """
+    def can_handle(self, shape: BaseShape | Subshape) -> bool:
+        return isinstance(shape, SlidePlaceholder)
 
-    match shape.placeholder_format.type:
-        case PP_PLACEHOLDER_TYPE.TITLE:
-            return Title(text=_interpret_text_frame(shape.text_frame))
-        case PP_PLACEHOLDER_TYPE.CENTER_TITLE:
-            return PresentationTitle(text=_interpret_text_frame(shape.text_frame))
-        case PP_PLACEHOLDER_TYPE.SLIDE_NUMBER:
-            return Ignore()
-        case PP_PLACEHOLDER_TYPE.OBJECT:
-            # Just pretend that object means a bunch of text, and nothing else.
-            return _interpret_text_frame(shape.text_frame)
-        case _:
+    def interpret(self, shape: BaseShape | Subshape) -> Element | Ignore | None:
+        if not isinstance(shape, SlidePlaceholder):
             return None
+            
+        match shape.placeholder_format.type:
+            case PP_PLACEHOLDER_TYPE.TITLE:
+                return Title(text=_interpret_text_frame(shape.text_frame))
+            case PP_PLACEHOLDER_TYPE.CENTER_TITLE:
+                return PresentationTitle(text=_interpret_text_frame(shape.text_frame))
+            case PP_PLACEHOLDER_TYPE.SLIDE_NUMBER:
+                return Ignore()
+            case PP_PLACEHOLDER_TYPE.OBJECT:
+                # Just pretend that object means a bunch of text, and nothing else.
+                return _interpret_text_frame(shape.text_frame)
+            case _:
+                return None
+
+
+register_shape_handler(SlidePlaceholderHandler())
 
 
 type Level = int
@@ -120,9 +145,9 @@ def interpret(shape: BaseShape | Subshape) -> Element | None:
     Interpreting a shape means converting it to an Element, i.e., an instance from our abstraction layer which
     we control. If a shape cannot be interpreted, this returns None.
     """
-    match shape:
-        case SlidePlaceholder():
-            return _interpret_placeholder(shape)
-        case _:
-            # TODO Implement as needed
-            return None
+    for handler in _SHAPE_HANDLERS:
+        if handler.can_handle(shape):
+            return handler.interpret(shape)
+            
+    # TODO Implement as needed
+    return None
