@@ -29,11 +29,7 @@ def test_two_content_blocks(caplog):
     typst_output = presentation.to_typst_str()
     print(typst_output)
 
-    # Check that a log is generated (since `Slide.content` is evaluated lazily)
-    assert "more than 1 content element" in caplog.text
-
-    # We expect "Left content block" since it takes the 0th element.
-    # We do NOT expect "Right content block" since it's ignored right now.
+    # We now expect BOTH content blocks to be rendered sequentially without dropping.
     assert "Left content block" in typst_output
-    assert "Right content block" not in typst_output
+    assert "Right content block" in typst_output
 

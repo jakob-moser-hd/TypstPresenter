@@ -8,5 +8,8 @@
 {% for slide in presentation %}
 == {{ slide.title | express }}
 
-{{ slide.content | express }}
+{% for content in slide.contents %}
+{{ content | express }}
+
+{% endfor %}
 {% endfor %}
