@@ -37,8 +37,8 @@ class Slide:
         # Try to detect grid layout
         content_with_coords = [e for e in content_placed if e.left is not None and e.top is not None]
         
-        # Only try to make a grid if we have at least 2 elements and all contents have coordinates
-        if len(content_with_coords) >= 2 and len(content_with_coords) == len(content_placed):
+        # Only try to make a grid if we have at least 1 element and all contents have coordinates
+        if len(content_with_coords) >= 1 and len(content_with_coords) == len(content_placed):
             TOLERANCE = 150000  # EMU tolerance (about 0.16 inches)
             
             def cluster(values: list[float]) -> list[float]:
@@ -60,20 +60,49 @@ class Slide:
             
             num_cols = len(lefts)
             num_rows = len(tops)
+
+            # --- Heuristics to infer missing grid dimensions ---
+            if num_cols == 1:
+                widths = [e.width for e in content_with_coords if e.width is not None]
+                if widths:
+                    max_w = max(widths)
+                    # 3 columns if width < ~3.2 inches (2900000)
+                    if max_w < 2900000: num_cols = 3
+                    # 2 columns if width < ~5.3 inches (4800000)
+                    elif max_w < 4800000: num_cols = 2
+                    
+            if num_rows == 1:
+                heights = [e.height for e in content_with_coords if e.height is not None]
+                if heights:
+                    max_h = max(heights)
+                    # 3 rows if height < ~2.0 inches (1828800)
+                    if max_h < 1800000: num_rows = 3
+                    # 2 rows if height < ~4.2 inches (3800000)
+                    elif max_h < 3800000: num_rows = 2
             
             # If we detect some structure, put them into a Grid
             if num_cols > 1 or num_rows > 1:
                 grid_items = [None] * (num_cols * num_rows)
                 for e in content_with_coords:
                     # Find column index
-                    col_idx = 0
-                    for i, l in enumerate(lefts):
-                        if abs(e.left - l) < TOLERANCE: col_idx = i; break
+                    if len(lefts) == num_cols:
+                        col_idx = 0
+                        for i, l in enumerate(lefts):
+                            if abs(e.left - l) < TOLERANCE: col_idx = i; break
+                    else:
+                        if num_cols == 2: col_idx = 0 if e.left < 4500000 else 1
+                        elif num_cols == 3: col_idx = 0 if e.left < 3000000 else (1 if e.left < 6000000 else 2)
+                        else: col_idx = 0
                     
                     # Find row index
-                    row_idx = 0
-                    for i, t in enumerate(tops):
-                        if abs(e.top - t) < TOLERANCE: row_idx = i; break
+                    if len(tops) == num_rows:
+                        row_idx = 0
+                        for i, t in enumerate(tops):
+                            if abs(e.top - t) < TOLERANCE: row_idx = i; break
+                    else:
+                        if num_rows == 2: row_idx = 0 if e.top < 3500000 else 1
+                        elif num_rows == 3: row_idx = 0 if e.top < 2600000 else (1 if e.top < 5200000 else 2)
+                        else: row_idx = 0
                     
                     idx = row_idx * num_cols + col_idx
                     if idx < len(grid_items):
