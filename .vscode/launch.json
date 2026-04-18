@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Run demo_convert",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/demo_convert.py",
+            "args": [
+                "tests/data/two_content.pptx"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}

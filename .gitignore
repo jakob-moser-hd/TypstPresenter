@@ -1,5 +1,6 @@
 # local dirs
 docs_local/
+tests/results_tmp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
