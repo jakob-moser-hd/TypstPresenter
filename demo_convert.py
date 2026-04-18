@@ -25,10 +25,7 @@ def main():
     
     typ_output_path = output_dir / input_file.with_suffix('.typ').name
     print(f"Generating Typst source to {typ_output_path}...")
-    typst_str = presentation.to_typst_str()
-    
-    with open(typ_output_path, 'w', encoding='utf-8') as f:
-        f.write(typst_str)
+    presentation.to_file(typ_output_path)
         
     print(f"Compiling Typst file to PDF...")
     try:

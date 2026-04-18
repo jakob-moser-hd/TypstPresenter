@@ -25,7 +25,7 @@ class ShapeHandler(Protocol):
     def can_handle(self, shape: BaseShape | Subshape) -> bool:
         ...
 
-    def interpret(self, shape: BaseShape | Subshape) -> Element | Ignore | None:
+    def interpret(self, shape: BaseShape | Subshape, context: dict | None = None) -> Element | Ignore | None:
         ...
 
 
@@ -47,7 +47,7 @@ class SlidePlaceholderHandler:
     def can_handle(self, shape: BaseShape | Subshape) -> bool:
         return isinstance(shape, SlidePlaceholder)
 
-    def interpret(self, shape: BaseShape | Subshape) -> Element | Ignore | None:
+    def interpret(self, shape: BaseShape | Subshape, context: dict | None = None) -> Element | Ignore | None:
         if not isinstance(shape, SlidePlaceholder):
             return None
             
@@ -56,8 +56,10 @@ class SlidePlaceholderHandler:
                 return Title(text=_interpret_text_frame(shape.text_frame, default_to_list=False))
             case PP_PLACEHOLDER_TYPE.CENTER_TITLE:
                 return PresentationTitle(text=_interpret_text_frame(shape.text_frame, default_to_list=False))
-            case PP_PLACEHOLDER_TYPE.SLIDE_NUMBER:
+            case PP_PLACEHOLDER_TYPE.SLIDE_NUMBER | PP_PLACEHOLDER_TYPE.HEADER | PP_PLACEHOLDER_TYPE.FOOTER | PP_PLACEHOLDER_TYPE.DATE:
                 return Ignore()
+            case PP_PLACEHOLDER_TYPE.SUBTITLE:
+                return _interpret_text_frame(shape.text_frame, default_to_list=False)
             case PP_PLACEHOLDER_TYPE.OBJECT:
                 # Just pretend that object means a bunch of text, and nothing else.
                 return _interpret_text_frame(shape.text_frame, default_to_list=False)
@@ -75,12 +77,35 @@ class TextBoxHandler:
     def can_handle(self, shape: BaseShape | Subshape) -> bool:
         return hasattr(shape, "text_frame") and not isinstance(shape, SlidePlaceholder)
 
-    def interpret(self, shape: BaseShape | Subshape) -> Element | Ignore | None:
+    def interpret(self, shape: BaseShape | Subshape, context: dict | None = None) -> Element | Ignore | None:
         if hasattr(shape, "text_frame") and getattr(shape, "has_text_frame", False):
             return _interpret_text_frame(shape.text_frame, default_to_list=False)
         return None
 
 register_shape_handler(TextBoxHandler())
+
+
+class PictureHandler:
+    def can_handle(self, shape: BaseShape | Subshape) -> bool:
+        from pptx.enum.shapes import MSO_SHAPE_TYPE
+        return hasattr(shape, "shape_type") and shape.shape_type == MSO_SHAPE_TYPE.PICTURE
+        
+    def interpret(self, shape: BaseShape | Subshape, context: dict | None = None) -> Element | Ignore | None:
+        from typstpresenter.model.MediaImage import MediaImage
+        context = context or {}
+        slide_idx = context.get("slide_index", 0)
+        elem_idx = context.get("element_index", 0)
+        
+        ext = shape.image.ext
+        name = f"slide_{slide_idx + 1}_pos_{elem_idx}.{ext}"
+        blob = shape.image.blob
+        width = getattr(shape, 'width', None)
+        height = getattr(shape, 'height', None)
+        width_pt = getattr(width, 'pt', None) if width else None
+        height_pt = getattr(height, 'pt', None) if height else None
+        return MediaImage(name=name, ext=ext, blob=blob, width_pt=width_pt, height_pt=height_pt)
+
+register_shape_handler(PictureHandler())
 
 
 type Level = int
@@ -162,16 +187,30 @@ def _interpret_run(run: _Run) -> Atom:
     return run.text
 
 
-def interpret(shape: BaseShape | Subshape) -> Element | None:
+def interpret(shape: BaseShape | Subshape, context: dict | None = None) -> Element | None:
     """
     Interpret a shape (or a subshape, which is an element introduced as child of a shape) coming from a PowerPoint.
 
     Interpreting a shape means converting it to an Element, i.e., an instance from our abstraction layer which
-    we control. If a shape cannot be interpreted, this returns None.
+    represents the contents of a PowerPoint independently of its presentation format. Multiple Handlers exist
+    for different kinds of shapes.
+
+    Returns the element (if recognized) or None if it should be completely ignored (such as slide numbers or pure design lines)
     """
+
     for handler in _SHAPE_HANDLERS:
         if handler.can_handle(shape):
-            return handler.interpret(shape)
-            
-    # TODO Implement as needed
+            interpreted = handler.interpret(shape, context=context)
+
+            # We could be more explicit in the return types maybe?
+            # E.g. what should you do with a SlideTitle? It feels strange returning it here alongside regular texts.
+            if isinstance(interpreted, Ignore):
+                return None
+
+            if isinstance(interpreted, Element):
+                return interpreted
+
+    logger.warning(
+        f"Ignoring Shape {shape.shape_type if hasattr(shape, 'shape_type') else 'Unknown'}. Did not find a matching handler."
+    )
     return None

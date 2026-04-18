@@ -59,3 +59,29 @@ def test_multi_content_blocks(caplog):
     # We'd expect grids with potentially more than 2 columns/rows or sequences
     assert "Sequential Grid (4/4)" in typst_output
 
+def test_media_conversion(caplog, tmp_path):
+    test_file = Path(__file__).parent / "data" / "media.pptx"
+    assert test_file.exists(), "Test data missing, please run generate_test_data.py"
+
+    presentation = Presentation.from_file(test_file)
+    
+    # Save the presentation to the tmp_path to verify media extraction
+    out_file = tmp_path / "media_test.typ"
+    presentation.to_file(out_file)
+    
+    assert out_file.exists()
+    typst_output = out_file.read_text(encoding="utf-8")
+    
+    # By default, to_file sets media_dir to the file's stem + "_media"
+    expected_media_dir = "media_test_media"
+    media_dir_path = out_file.parent / expected_media_dir
+    assert media_dir_path.exists()
+    assert media_dir_path.is_dir()
+    
+    # Check that there is at least one image inside the directory
+    extracted_images = list(media_dir_path.glob("*.*"))
+    assert len(extracted_images) >= 1
+    
+    # Check that the typst_output includes an #image() reference
+    image_rel_path = f"{expected_media_dir}/{extracted_images[0].name}".replace("\\", "/")
+    assert f'#image("{image_rel_path}"' in typst_output

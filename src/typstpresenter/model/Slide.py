@@ -126,13 +126,14 @@ class Slide:
         return elements[0]
 
     @classmethod
-    def from_pptx_slide(cls, pptx_slide: pptx.slide.Slide) -> Self:
+    def from_pptx_slide(cls, pptx_slide: pptx.slide.Slide, slide_index: int = 0) -> Self:
         # pptx_slide.slide_layout.name contains the layout name, which is often rather useless, as it can be
         # "Titel und Inhalt" irrespective of whether the slide contains structured bullet-points or completely
         # free floating thought bubbles.
 
         elements_and_shapes = tuple(
-            (interpret(shape), shape) for shape in flatten(pptx_slide.shapes)
+            (interpret(shape, context={"slide_index": slide_index, "element_index": i}), shape) 
+            for i, shape in enumerate(flatten(pptx_slide.shapes))
         )
 
         placed_elements = []

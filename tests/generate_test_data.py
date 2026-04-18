@@ -175,6 +175,44 @@ def create_multi_content_pptx(path: Path, config: PresentationConfig):
     prs.save(path)
 
 
+def get_dummy_image():
+    import base64
+    import io
+    # Basic 1x1 red pixel PNG
+    img_b64 = b"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+    return io.BytesIO(base64.b64decode(img_b64))
+
+
+def create_media_pptx(path: Path, config: PresentationConfig):
+    prs = pptx.Presentation()
+    add_title_slide(prs, "Media Layouts Test", "Slides with Images alongside Text")
+    
+    # Slide 1: Image Left, Text Right
+    slide = add_slide_with_title(prs, "Image and Text")
+    
+    content_width = (config.slide_width_in - 2 * config.margin_x_in - config.gutter_in) / 2
+    content_height = config.slide_height_in - config.margin_y_in - 1.0
+    
+    slide.shapes.add_picture(
+        get_dummy_image(), 
+        Inches(config.margin_x_in), 
+        Inches(config.margin_y_in), 
+        width=Inches(content_width), 
+        height=Inches(content_height)
+    )
+    
+    tx = slide.shapes.add_textbox(
+        Inches(config.margin_x_in + content_width + config.gutter_in), 
+        Inches(config.margin_y_in), 
+        Inches(content_width), 
+        Inches(content_height)
+    )
+    tx.text_frame.word_wrap = True
+    tx.text_frame.text = generate_placeholder_text("Text next to an image.", item_count=2)
+    
+    prs.save(path)
+
+
 if __name__ == "__main__":
     out_dir = Path("tests/data")
     out_dir.mkdir(exist_ok=True, parents=True)
@@ -184,5 +222,6 @@ if __name__ == "__main__":
     create_simple_pptx(out_dir / "simple.pptx", config)
     create_two_content_pptx(out_dir / "two_content.pptx", config)
     create_multi_content_pptx(out_dir / "multi_content.pptx", config)
+    create_media_pptx(out_dir / "media.pptx", config)
     
     print("Testdaten wurden erfolgreich generiert!")
