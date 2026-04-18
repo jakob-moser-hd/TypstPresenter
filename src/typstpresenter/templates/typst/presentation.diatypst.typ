@@ -1,6 +1,7 @@
 #import "@preview/diatypst:0.9.1": *
 #show: slides.with(
-  title: [{{ presentation.title | express }}]
+  title: [{{ presentation.title | express }}],
+  toc: false
 )
 
 #set heading(numbering: none)

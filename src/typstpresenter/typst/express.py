@@ -101,7 +101,9 @@ class GridHandler:
 
     def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
         items = ",\n".join(f"  [{dispatcher(item)}]" for item in element.items)
-        return f"#grid(\n  columns: {element.columns},\n  gutter: 1em,\n{items}\n)"
+        cols = ", ".join(["1fr"] * element.columns)
+        columns_value = f"({cols})" if element.columns > 1 else "1fr"
+        return f"#grid(\n  columns: {columns_value},\n  gutter: 1em,\n{items}\n)"
 
 
 class TitleHandler:
