@@ -120,7 +120,9 @@ class StringHandler:
 
     def express(self, element: Any, dispatcher: Callable[[Element | str | None], str]) -> str:
         # TODO Improve escaping logic
-        return element.replace("*", r"\\*").replace("~", r"\\~")
+        escaped = element.replace("*", r"\*").replace("~", r"\~")
+        escaped = escaped.replace("[", r"\[").replace("]", r"\]")
+        return escaped
 
 
 class NoneHandler:

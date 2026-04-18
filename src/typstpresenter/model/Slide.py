@@ -35,13 +35,51 @@ class Slide:
         content_placed = [e for e in self.elements if not isinstance(e.element, Title)]
         
         # Try to detect grid layout
-        if len(content_placed) == 2:
-            pe1, pe2 = content_placed[0], content_placed[1]
-            if pe1.left is not None and pe2.left is not None:
-                # Check if they are offset horizontally (side-by-side)
-                if pe1.left != pe2.left:
-                    ordered = sorted([pe1, pe2], key=lambda x: x.left)
-                    return (Grid(columns=2, items=[pe.element for pe in ordered]),)
+        content_with_coords = [e for e in content_placed if e.left is not None and e.top is not None]
+        
+        # Only try to make a grid if we have at least 2 elements and all contents have coordinates
+        if len(content_with_coords) >= 2 and len(content_with_coords) == len(content_placed):
+            TOLERANCE = 150000  # EMU tolerance (about 0.16 inches)
+            
+            def cluster(values: list[float]) -> list[float]:
+                if not values: return []
+                values = sorted(values)
+                clusters = []
+                curr = [values[0]]
+                for v in values[1:]:
+                    if v - (sum(curr) / len(curr)) < TOLERANCE:
+                        curr.append(v)
+                    else:
+                        clusters.append(sum(curr) / len(curr))
+                        curr = [v]
+                clusters.append(sum(curr) / len(curr))
+                return clusters
+
+            lefts = cluster([e.left for e in content_with_coords])
+            tops = cluster([e.top for e in content_with_coords])
+            
+            num_cols = len(lefts)
+            num_rows = len(tops)
+            
+            # If we detect some structure, put them into a Grid
+            if num_cols > 1 or num_rows > 1:
+                grid_items = [None] * (num_cols * num_rows)
+                for e in content_with_coords:
+                    # Find column index
+                    col_idx = 0
+                    for i, l in enumerate(lefts):
+                        if abs(e.left - l) < TOLERANCE: col_idx = i; break
+                    
+                    # Find row index
+                    row_idx = 0
+                    for i, t in enumerate(tops):
+                        if abs(e.top - t) < TOLERANCE: row_idx = i; break
+                    
+                    idx = row_idx * num_cols + col_idx
+                    if idx < len(grid_items):
+                        grid_items[idx] = e.element
+                
+                return (Grid(columns=num_cols, items=grid_items),)
 
         return tuple(e.element for e in content_placed)
 

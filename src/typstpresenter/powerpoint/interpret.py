@@ -53,14 +53,14 @@ class SlidePlaceholderHandler:
             
         match shape.placeholder_format.type:
             case PP_PLACEHOLDER_TYPE.TITLE:
-                return Title(text=_interpret_text_frame(shape.text_frame))
+                return Title(text=_interpret_text_frame(shape.text_frame, default_to_list=False))
             case PP_PLACEHOLDER_TYPE.CENTER_TITLE:
-                return PresentationTitle(text=_interpret_text_frame(shape.text_frame))
+                return PresentationTitle(text=_interpret_text_frame(shape.text_frame, default_to_list=False))
             case PP_PLACEHOLDER_TYPE.SLIDE_NUMBER:
                 return Ignore()
             case PP_PLACEHOLDER_TYPE.OBJECT:
                 # Just pretend that object means a bunch of text, and nothing else.
-                return _interpret_text_frame(shape.text_frame)
+                return _interpret_text_frame(shape.text_frame, default_to_list=False)
             case _:
                 return None
 
@@ -68,12 +68,36 @@ class SlidePlaceholderHandler:
 register_shape_handler(SlidePlaceholderHandler())
 
 
+class TextBoxHandler:
+    """
+    Interpret generic shapes that contain a text frame (e.g. manually added text boxes).
+    """
+    def can_handle(self, shape: BaseShape | Subshape) -> bool:
+        return hasattr(shape, "text_frame") and not isinstance(shape, SlidePlaceholder)
+
+    def interpret(self, shape: BaseShape | Subshape) -> Element | Ignore | None:
+        if hasattr(shape, "text_frame") and getattr(shape, "has_text_frame", False):
+            return _interpret_text_frame(shape.text_frame, default_to_list=False)
+        return None
+
+register_shape_handler(TextBoxHandler())
+
+
 type Level = int
 
 
-def _interpret_text_frame(text_frame: TextFrame) -> Text | List:
+def _interpret_text_frame(text_frame: TextFrame, default_to_list: bool = True) -> Text | List:
     if len(text_frame.paragraphs) == 1:
         return _interpret_paragraph(text_frame.paragraphs[0])
+        
+    if not default_to_list:
+        atoms = []
+        for p in text_frame.paragraphs:
+            atoms.extend(_interpret_paragraph(p).value)
+            atoms.append("\n")
+        if atoms:
+            atoms.pop()
+        return Text(tuple(atoms))
 
     # Just pretend any multi-paragraph text is a list
     paragraphs_by_level = groupby(text_frame.paragraphs, key=lambda item: item.level)
