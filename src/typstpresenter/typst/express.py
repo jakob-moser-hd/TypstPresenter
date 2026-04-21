@@ -25,6 +25,20 @@ _jinja_env = Environment(
     loader=PackageLoader("typstpresenter"), autoescape=select_autoescape()
 )
 
+# If need be, one could encapsulate this, but currently, there is no need.
+_expressors: list[Expressor] = [
+    LinkExpressor(),
+    TextExpressor(),
+    SubscriptExpressor(),
+    SuperscriptExpressor(),
+    ListExpressor(),
+    GridExpressor(),
+    ImageExpressor(),
+    TitleExpressor(),
+    StringExpressor(),
+    NoneExpressor(),
+]
+
 
 def express(presentation: Presentation, media_dir: str = "media") -> str:
     """
@@ -35,33 +49,15 @@ def express(presentation: Presentation, media_dir: str = "media") -> str:
     )
 
 
-_EXPRESSORS: list[Expressor] = []
-
-
-def register_expressor(expressor: Expressor) -> None:
-    _EXPRESSORS.append(expressor)
-
-
-register_expressor(LinkExpressor())
-register_expressor(TextExpressor())
-register_expressor(SubscriptExpressor())
-register_expressor(SuperscriptExpressor())
-register_expressor(ListExpressor())
-register_expressor(GridExpressor())
-register_expressor(ImageExpressor())
-register_expressor(TitleExpressor())
-register_expressor(StringExpressor())
-register_expressor(NoneExpressor())
-
-
 @pass_context
 def _express_element(context: Any, element: Element | str | None) -> str:
     def dispatcher(e: Element | str | None) -> str:
         return _express_element(context, e)
 
-    for expressor in _EXPRESSORS:
+    for expressor in _expressors:
         if expressor.can_express(element):
             return expressor.express(element, dispatcher, context)
+
     return str(element)
 
 
