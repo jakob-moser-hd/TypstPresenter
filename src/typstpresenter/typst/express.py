@@ -108,8 +108,8 @@ class GridHandler:
 
 class ImageHandler:
     def can_handle(self, element: Element | str | None) -> bool:
-        from typstpresenter.model.MediaImage import MediaImage
-        return isinstance(element, MediaImage)
+        from typstpresenter.model.MediaImage import Image
+        return isinstance(element, Image)
 
     def express(self, element: Any, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
         media_dir = context.get('media_dir', 'media')

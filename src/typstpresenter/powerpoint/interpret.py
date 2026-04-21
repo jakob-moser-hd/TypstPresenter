@@ -91,7 +91,7 @@ class PictureHandler:
         return hasattr(shape, "shape_type") and shape.shape_type == MSO_SHAPE_TYPE.PICTURE
         
     def interpret(self, shape: BaseShape | Subshape, context: dict | None = None) -> Element | Ignore | None:
-        from typstpresenter.model.MediaImage import MediaImage
+        from typstpresenter.model.MediaImage import Image
         context = context or {}
         slide_idx = context.get("slide_index", 0)
         elem_idx = context.get("element_index", 0)
@@ -103,7 +103,7 @@ class PictureHandler:
         height = getattr(shape, 'height', None)
         width_pt = getattr(width, 'pt', None) if width else None
         height_pt = getattr(height, 'pt', None) if height else None
-        return MediaImage(name=name, ext=ext, blob=blob, width_pt=width_pt, height_pt=height_pt)
+        return Image(name=name, ext=ext, blob=blob, width_pt=width_pt, height_pt=height_pt)
 
 register_shape_handler(PictureHandler())
 

@@ -55,11 +55,11 @@ class Presentation(Sequence[Slide]):
         media_dir_name = f"{path.stem}_media"
         media_dir_path = path.parent / media_dir_name
 
-        from typstpresenter.model.MediaImage import MediaImage
+        from typstpresenter.model.MediaImage import Image
         images = []
         for slide in self.slides:
             for placed in slide.elements:
-                if isinstance(placed.element, MediaImage):
+                if isinstance(placed.element, Image):
                     images.append(placed.element)
 
         if images:
