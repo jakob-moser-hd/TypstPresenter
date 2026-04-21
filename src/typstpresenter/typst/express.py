@@ -35,14 +35,6 @@ def express(presentation: Presentation, media_dir: str = "media") -> str:
     )
 
 
-def _indent(string: str) -> str:
-    return "\n".join(f"  {line}" for line in string.split("\n"))
-
-
-def _indent_or_add_dash(criterion: bool, string: str) -> str:
-    return _indent(string) if criterion else f"- {string}"
-
-
 _EXPRESSORS: list[Expressor] = []
 
 
