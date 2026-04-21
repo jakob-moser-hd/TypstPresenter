@@ -1,0 +1,13 @@
+from __future__ import annotations
+
+from typing import Protocol, Callable, Any
+
+from typstpresenter.model.Element import Element
+
+
+class Expressor(Protocol):
+    def can_express(self, element: Element | str | None) -> bool:
+        ...
+
+    def express(self, element: Element | str | None, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
+        ...
