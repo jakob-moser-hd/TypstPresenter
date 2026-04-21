@@ -56,7 +56,7 @@ def _express_element(context: Any, element: Element | str | None) -> str:
 
     for expressor in _expressors:
         if expressor.can_express(element):
-            return expressor.express(element, dispatcher, context)
+            return expressor(element, dispatcher, context)
 
     return str(element)
 

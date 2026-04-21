@@ -10,7 +10,7 @@ class GridExpressor:
     def can_express(self, element: Element | str | None) -> bool:
         return isinstance(element, Grid)
 
-    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
+    def __call__(self, element: Any, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
         items = ",\n".join(f"  [{dispatcher(item)}]" for item in element.items)
         cols = ", ".join(["1fr"] * element.columns)
         columns_value = f"({cols})" if element.columns > 1 else "1fr"

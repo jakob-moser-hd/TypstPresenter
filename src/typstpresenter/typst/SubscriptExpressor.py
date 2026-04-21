@@ -10,5 +10,5 @@ class SubscriptExpressor:
     def can_express(self, element: Element | str | None) -> bool:
         return isinstance(element, Subscript)
 
-    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
+    def __call__(self, element: Any, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
         return f"#sub[{dispatcher(element.text)}]"

@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import Any, Callable
 
 from typstpresenter.model.Element import Element
+from typstpresenter.model.Image import Image
 
 
 class ImageExpressor:
     def can_express(self, element: Element | str | None) -> bool:
-        from typstpresenter.model.MediaImage import Image
         return isinstance(element, Image)
 
-    def express(self, element: Any, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
+    def __call__(self, element: Any, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
         media_dir = context.get('media_dir', 'media')
         import posixpath
         img_path = posixpath.join(media_dir, element.name)

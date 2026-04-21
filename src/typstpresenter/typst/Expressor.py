@@ -9,5 +9,5 @@ class Expressor(Protocol):
     def can_express(self, element: Element | str | None) -> bool:
         ...
 
-    def express(self, element: Element | str | None, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
+    def __call__(self, element: Element | str | None, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
         ...
