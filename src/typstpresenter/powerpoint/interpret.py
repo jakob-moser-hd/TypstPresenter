@@ -91,7 +91,7 @@ class PictureHandler:
         return hasattr(shape, "shape_type") and shape.shape_type == MSO_SHAPE_TYPE.PICTURE
         
     def interpret(self, shape: BaseShape | Subshape, context: dict | None = None) -> Element | Ignore | None:
-        from typstpresenter.model.MediaImage import Image
+        from typstpresenter.model.Image import Image
         context = context or {}
         slide_idx = context.get("slide_index", 0)
         elem_idx = context.get("element_index", 0)
