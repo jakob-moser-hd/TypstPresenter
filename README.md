@@ -17,7 +17,7 @@ uv tool install git+https://github.com/aip-hd-tea/TypstPresenter.git
 ## Usage
 
 ```bash
-typstpresenter convert presentation.pdf presentation.typ
+typstpresenter convert presentation.pptx presentation.typ
 ```
 
 ## Adding your own templates
