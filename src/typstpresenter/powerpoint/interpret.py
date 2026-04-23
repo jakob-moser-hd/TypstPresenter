@@ -62,7 +62,7 @@ class SlidePlaceholderHandler:
                 return _interpret_text_frame(shape.text_frame, default_to_list=False)
             case PP_PLACEHOLDER_TYPE.OBJECT:
                 # Just pretend that object means a bunch of text, and nothing else.
-                return _interpret_text_frame(shape.text_frame, default_to_list=False)
+                return _interpret_text_frame(shape.text_frame, default_to_list=True)
             case _:
                 return None
 
