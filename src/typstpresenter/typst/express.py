@@ -5,17 +5,17 @@ from typing import TYPE_CHECKING, Any
 from jinja2 import Environment, PackageLoader, select_autoescape, pass_context
 
 from typstpresenter.model.Element import Element
-from typstpresenter.typst.Expressor import Expressor
-from typstpresenter.typst.GridExpressor import GridExpressor
-from typstpresenter.typst.ImageExpressor import ImageExpressor
-from typstpresenter.typst.LinkExpressor import LinkExpressor
-from typstpresenter.typst.ListExpressor import ListExpressor
-from typstpresenter.typst.NoneExpressor import NoneExpressor
-from typstpresenter.typst.StringExpressor import StringExpressor
-from typstpresenter.typst.SubscriptExpressor import SubscriptExpressor
-from typstpresenter.typst.SuperscriptExpressor import SuperscriptExpressor
-from typstpresenter.typst.TextExpressor import TextExpressor
-from typstpresenter.typst.TitleExpressor import TitleExpressor
+from typstpresenter.typst.expressors.Expressor import Expressor
+from typstpresenter.typst.expressors.GridExpressor import GridExpressor
+from typstpresenter.typst.expressors.ImageExpressor import ImageExpressor
+from typstpresenter.typst.expressors.LinkExpressor import LinkExpressor
+from typstpresenter.typst.expressors.ListExpressor import ListExpressor
+from typstpresenter.typst.expressors.NoneExpressor import NoneExpressor
+from typstpresenter.typst.expressors.StringExpressor import StringExpressor
+from typstpresenter.typst.expressors.SubscriptExpressor import SubscriptExpressor
+from typstpresenter.typst.expressors.SuperscriptExpressor import SuperscriptExpressor
+from typstpresenter.typst.expressors.TextExpressor import TextExpressor
+from typstpresenter.typst.expressors.TitleExpressor import TitleExpressor
 
 if TYPE_CHECKING:
     from typstpresenter.model.Presentation import Presentation
