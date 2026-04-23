@@ -26,6 +26,9 @@ class Presentation(Sequence[Slide]):
         Currently assumes that the path points to a *.pptx file, no other file types can be handled.
         Will fail if other files are presented, possibly in curious ways.
         """
+        if not path.is_file():
+            raise FileNotFoundError(f"'{path}' is not a file")
+
         prs = pptx.Presentation(str(path))
         slides = tuple(Slide.from_pptx_slide(pptx_slide, slide_index=i) for i, pptx_slide in enumerate(prs.slides))
 
