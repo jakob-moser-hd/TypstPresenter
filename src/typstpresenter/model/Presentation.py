@@ -26,8 +26,11 @@ class Presentation(Sequence[Slide]):
         Currently assumes that the path points to a *.pptx file, no other file types can be handled.
         Will fail if other files are presented, possibly in curious ways.
         """
+        if not path.is_file():
+            raise FileNotFoundError(f"'{path}' is not a file")
+
         prs = pptx.Presentation(str(path))
-        slides = tuple(Slide.from_pptx_slide(pptx_slide) for pptx_slide in prs.slides)
+        slides = tuple(Slide.from_pptx_slide(pptx_slide, slide_index=i) for i, pptx_slide in enumerate(prs.slides))
 
         # The title slide is metadata in my world, so we remove it from the set of slides later, and extract the
         # metadata here in a dedicated way.
@@ -39,20 +42,36 @@ class Presentation(Sequence[Slide]):
             source_path=path,
         )
 
-    def to_typst_str(self) -> str:
+    def to_typst_str(self, media_dir: str = "media") -> str:
         """
         Convert the presentation to a string in Typst format and return it.
         """
-        return express(self)
+        return express(self, media_dir=media_dir)
 
     def to_file(self, path: Path) -> None:
         """
         Save a presentation to the given path.
 
         Will output the file in *.typ (Typst) format, no matter the extension.
+        Extracts any media required (e.g., images) to a neighboring folder.
         """
+        media_dir_name = f"{path.stem}_media"
+        media_dir_path = path.parent / media_dir_name
+
+        from typstpresenter.model.Image import Image
+        images = []
+        for slide in self.slides:
+            for placed in slide.elements:
+                if isinstance(placed.element, Image):
+                    images.append(placed.element)
+
+        if images:
+            media_dir_path.mkdir(exist_ok=True, parents=True)
+            for img in images:
+                (media_dir_path / img.name).write_bytes(img.blob)
+
         with path.open("w", encoding="utf-8") as f:
-            f.write(self.to_typst_str())
+            f.write(self.to_typst_str(media_dir=media_dir_name))
 
     @overload
     def __getitem__(self, index: int) -> Slide: ...

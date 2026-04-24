@@ -4,7 +4,7 @@ Maintainer: Jakob Moser <jakob@fsco.li>
 
 Converts PowerPoint presentations (`*.pptx`) to Typst presentations (`*.typ`). The Typst library [diatypst](https://typst.app/universe/package/diatypst/) is used to typeset the slides, however, you can add your own _templates_ to this application if you want to support a different library.
 
-## Installation
+## Installation and usage as uv tool
 
 First, install `uv`: https://docs.astral.sh/uv/getting-started/installation/
 
@@ -14,10 +14,19 @@ Then, install TypstPresenter as a tool:
 uv tool install git+https://github.com/aip-hd-tea/TypstPresenter.git
 ```
 
-## Usage
+### Usage as uv tool
 
 ```bash
-typstpresenter convert presentation.pdf presentation.typ
+typstpresenter convert presentation.pptx presentation.typ
+```
+
+## Running without tool installation
+
+```bash
+# Example of converting and compiling ./tests/data/media.pptx to PDF
+cd TypstPresenter
+uv sync
+uv run typstpresenter convert --compile ./tests/data/media.pptx
 ```
 
 ## Adding your own templates

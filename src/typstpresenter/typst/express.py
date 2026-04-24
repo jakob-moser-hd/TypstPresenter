@@ -1,17 +1,21 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, PackageLoader, select_autoescape, pass_context
 
 from typstpresenter.model.Element import Element
-from typstpresenter.model.List import List
-from typstpresenter.model.PresentationTitle import PresentationTitle
-from typstpresenter.model.Title import Title
-from typstpresenter.model.text.Link import Link
-from typstpresenter.model.text.Subscript import Subscript
-from typstpresenter.model.text.Superscript import Superscript
-from typstpresenter.model.text.Text import Text
+from typstpresenter.typst.expressors.Expressor import Expressor
+from typstpresenter.typst.expressors.GridExpressor import GridExpressor
+from typstpresenter.typst.expressors.ImageExpressor import ImageExpressor
+from typstpresenter.typst.expressors.LinkExpressor import LinkExpressor
+from typstpresenter.typst.expressors.ListExpressor import ListExpressor
+from typstpresenter.typst.expressors.NoneExpressor import NoneExpressor
+from typstpresenter.typst.expressors.StringExpressor import StringExpressor
+from typstpresenter.typst.expressors.SubscriptExpressor import SubscriptExpressor
+from typstpresenter.typst.expressors.SuperscriptExpressor import SuperscriptExpressor
+from typstpresenter.typst.expressors.TextExpressor import TextExpressor
+from typstpresenter.typst.expressors.TitleExpressor import TitleExpressor
 
 if TYPE_CHECKING:
     from typstpresenter.model.Presentation import Presentation
@@ -21,45 +25,40 @@ _jinja_env = Environment(
     loader=PackageLoader("typstpresenter"), autoescape=select_autoescape()
 )
 
+# If need be, one could encapsulate this, but currently, there is no need.
+_expressors: list[Expressor] = [
+    LinkExpressor(),
+    TextExpressor(),
+    SubscriptExpressor(),
+    SuperscriptExpressor(),
+    ListExpressor(),
+    GridExpressor(),
+    ImageExpressor(),
+    TitleExpressor(),
+    StringExpressor(),
+    NoneExpressor(),
+]
 
-def express(presentation: Presentation) -> str:
+
+def express(presentation: Presentation, media_dir: str = "media") -> str:
     """
     Express a presentation represented in an abstract format as a Typst string.
     """
     return _jinja_env.get_template("typst/presentation.diatypst.typ").render(
-        presentation=presentation
+        presentation=presentation, media_dir=media_dir
     )
 
 
-def __indent(string: str) -> str:
-    return "\n".join(f"  {line}" for line in string.split("\n"))
+@pass_context
+def _express_element(context: Any, element: Element | str | None) -> str:
+    def dispatcher(e: Element | str | None) -> str:
+        return _express_element(context, e)
 
+    for expressor in _expressors:
+        if expressor.can_express(element):
+            return expressor(element, dispatcher, context)
 
-def __indent_or_add_dash(criterion: bool, string: str) -> str:
-    return __indent(string) if criterion else f"- {string}"
-
-
-def _express_element(element: Element | str) -> str:
-    match element:
-        case Link(text, target):
-            return f'#link("{target}")[{_express_element(text)}]'
-        case Text(value):
-            return "".join(_express_element(x) for x in value)
-        case Subscript(text):
-            return f"#sub[{_express_element(text)}]"
-        case Superscript(text):
-            return f"#super[{_express_element(text)}]"
-        case List(items):
-            return "\n".join(__indent_or_add_dash(isinstance(item, List), _express_element(item)) for item in items)
-        case Title(text) | PresentationTitle(text):
-            return _express_element(text)
-        case str() as s:
-            # TODO Improve escaping logic
-            return s.replace("*", r"\*").replace("~", r"\~")
-        case None:
-            return ""
-        case _:
-            return str(element)
+    return str(element)
 
 
 # This way, you can say something in Jinja like `{{ slide.title | express }}` and Jinja will apply the _express_element

@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Convert demo file",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "typstpresenter",
+            "args": [
+                "convert",
+                "tests/data/two_content.pptx",
+                "--compile",
+                "-o",
+                "tests/results_tmp"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}
