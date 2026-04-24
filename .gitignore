@@ -1,9 +1,11 @@
 # local dirs
 docs_local/
 tests/results_tmp/
+tests/data/data_to_ignore
 tests/data/*.pdf
 tests/data/*.typ
 tests/data/media*
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -212,4 +214,4 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-tests/data/vl03_ibn.pptx
+
