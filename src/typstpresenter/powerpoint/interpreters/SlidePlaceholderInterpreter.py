@@ -119,14 +119,14 @@ _SUPERSCRIPT = "30000"
 
 def _interpret_run(run: _Run) -> Atom:
     if run.hyperlink.address is not None:
-        return Link(text=Text(run.text), target=run.hyperlink.address)
+        return Link(text=Text((run.text,)), target=run.hyperlink.address)
 
     # The text baseline indicates how high in a line the run is positioned.
     baseline_position = run.font._element.get("baseline")
 
     if baseline_position == _SUBSCRIPT:
-        return Subscript(text=Text(run.text))
+        return Subscript(text=Text((run.text,)))
     elif baseline_position == _SUPERSCRIPT:
-        return Superscript(text=Text(run.text))
+        return Superscript(text=Text((run.text,)))
 
     return run.text
