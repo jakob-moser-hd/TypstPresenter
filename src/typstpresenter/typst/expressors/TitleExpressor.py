@@ -11,5 +11,5 @@ class TitleExpressor:
     def can_express(self, element: Element | str | None) -> bool:
         return isinstance(element, Title) or isinstance(element, PresentationTitle)
 
-    def __call__(self, element: Any, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
-        return dispatcher(element.text)
+    def __call__(self, element: Any, express: Callable[[Element | str | None], str], context: Any) -> str:
+        return express(element.text)

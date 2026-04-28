@@ -17,5 +17,5 @@ class ListExpressor:
     def can_express(self, element: Element | str | None) -> bool:
         return isinstance(element, List)
 
-    def __call__(self, element: Any, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
-        return "\n".join(self.__indent_or_add_dash(isinstance(item, List), dispatcher(item)) for item in element.items)
+    def __call__(self, element: Any, express: Callable[[Element | str | None], str], context: Any) -> str:
+        return "\n".join(self.__indent_or_add_dash(isinstance(item, List), express(item)) for item in element.items)

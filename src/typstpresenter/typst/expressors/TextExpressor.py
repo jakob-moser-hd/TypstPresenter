@@ -10,5 +10,5 @@ class TextExpressor:
     def can_express(self, element: Element | str | None) -> bool:
         return isinstance(element, Text)
 
-    def __call__(self, element: Any, dispatcher: Callable[[Element | str | None], str], context: Any) -> str:
-        return "".join(dispatcher(x) for x in element.value)
+    def __call__(self, element: Any, express: Callable[[Element | str | None], str], context: Any) -> str:
+        return "".join(express(x) for x in element.value)
