@@ -6,7 +6,7 @@ from typing import Any, Callable
 from typstpresenter.model.Element import Element
 
 
-CHARS_TO_ESCAPE = ("*", "~", "[", "]", "#")
+CHARS_TO_ESCAPE = ("*", "~", "[", "]", "#", "@", "<", ">")
 
 
 class StringExpressor:
