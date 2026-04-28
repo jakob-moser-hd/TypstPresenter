@@ -1,3 +1,5 @@
+from _pytest.raises import raises
+
 from typstpresenter.model.text.Text import Text
 from typstpresenter.model.List import List
 from typstpresenter.model.Element import Element
@@ -6,6 +8,12 @@ def test_text_creation():
     t = Text(["Hello, ", "World!"])
     assert str(t) == "Hello, World!"
     assert isinstance(t, Element)
+
+
+def test_error_is_thrown_when_parameter_is_str() -> None:
+    with raises(TypeError):
+        Text("Hello")
+
 
 def test_list_creation():
     t1 = Text(["Item 1"])
